@@ -1,0 +1,43 @@
+title: FRAMEWORK FOR NETWORK COVERT CHANNELS
+owner:
+  name: Katharina
+  copyright: 2023
+settings:
+  # global settings for the simulation
+  # Quit after adjustable period of time [sec] or by 0, quit by completion of the message transfer
+  time_quit: 0
+  # a name for the simulation - don't use slashes or backslashes
+  name: "mqtt-testing"
+protocols:
+  # Choose between "OPCUA", "MODBUS", "S7COMM", "MQTT", "CoAP"
+  MQTT:
+    # Time intervals between retransmissions/reconnections/resets [sec]
+    time_interval: 2
+    client:
+      host: sub
+      path: mqtt/subscriber # the path to the Dockerfile
+      image: null # if an external image should be used (not yet supported)
+      instances: 16 # how often should the non-malicious client spawn
+    server:
+      host: server
+      port: 1883
+      internal: true
+      image: emqx:latest
+      path: null
+      healthcheck: "/opt/emqx/bin/emqx_ctl status"
+    channels:
+      PT15:
+        exploited_clients: 4 # how many further clients should be used for the channel
+        path: mqtt/covert/pt15-reconnect
+        image: null
+        covert_str: my little secret message
+        covert_file: null
+      PT16:
+        exploited_clients: 3 # how many further clients should be used for the channel
+        path: mqtt/covert/pt16-reset
+        image: null
+        covert_str: null
+        covert_file: /home/user/payload.bin
+
+
+

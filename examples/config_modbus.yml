@@ -1,0 +1,55 @@
+title: FRAMEWORK FOR NETWORK COVERT CHANNELS
+owner:
+  name: Katharina
+  copyright: 2023
+settings:
+  # global settings for the simulation
+  # Quit after adjustable period of time [sec] or by 0, quit by completion of the message transfer
+  time_quit: 0
+  # a name for the simulation - don't use slashes or backslashes
+  name: "modbus-test"
+protocols:
+  # Choose between "OPCUA", "MODBUS", "S7COMM", "MQTT", "CoAP"
+  MODBUS:
+    # Time intervals between retransmissions/reconnections/resets [sec]
+    time_interval: 2
+    client:
+      host: master
+      path: modbus/master-simulator # the path to the Dockerfile
+      image: null # if an external image should be used (not yet supported)
+      instances: 1 # how often should the non-malicious client spawn
+    server:
+      host: slave
+      port: 502
+      internal: true
+      image: null
+      path: modbus/slave-simulator
+      healthcheck: "nc -z -v localhost 502"
+    channels:
+      PT12:
+        exploited_clients: 0  # how many further clients should be used for the channel
+        path: modbus/covert/pt12-retransmission
+        image: null
+        # Choose the Covert Message
+        covert_str: this is my secret message
+      PT12L5:
+        exploited_clients: 0  # how many further clients should be used for the channel
+        path: modbus/covert/pt12-l5-retransmission
+        image: null
+        # Choose the Covert Message - small values for testing modbus pt12-l5
+        covert_str: A00
+      PT15:
+        exploited_clients: 0 # how many further clients should be used for the channel
+        path: modbus/covert/pt15-reconnect
+        image: null
+        covert_str: my little secret message
+        covert_file: null
+      PT16:
+        exploited_clients: 0 # how many further clients should be used for the channel
+        path: modbus/covert/pt16-resets
+        image: null
+        covert_str: null
+        covert_file: /home/user/payload.bin
+
+
+

@@ -1,0 +1,42 @@
+title: FRAMEWORK FOR NETWORK COVERT CHANNELS
+owner:
+  name: Katharina
+  copyright: 2023
+settings:
+  # global settings for the simulation
+  # Quit after adjustable period of time [sec] or by 0, quit by completion of the message transfer
+  time_quit: 120
+  # a name for the simulation
+  name: "s7test"
+protocols:
+  # Choose between "OPCUA", "MODBUS", "S7COMM", "MQTT", "CoAP"
+  S7COMM:
+    # Time intervals between retransmissions/reconnections/resets [sec]
+    time_interval: 3
+    client:
+      host: s7-client
+      path: s7comm/client # the path to the Dockerfile
+      image: null # if an external image should be used (not yet supported)
+      instances: 5 # how often should the non-malicious client spawn
+    server:
+      host: s7-server
+      port: 102
+      internal: true
+      image: null
+      path: s7comm/server
+      healthcheck: "nc -z -v localhost 102"
+    channels:
+      PT12:
+        exploited_clients: 0  # how many third-party-nodes should be used for the channel
+        path: s7comm/pt12-retransmission
+        image: null
+        # Choose the Covert Message
+        covert_str: first_secret
+      PT15:
+        exploited_clients: 0  # how many third-party-nodes should be used for the channel
+        path: s7comm/pt15-reconnect
+        image: null
+        # Choose the Covert Message
+        covert_str: other_secret
+
+

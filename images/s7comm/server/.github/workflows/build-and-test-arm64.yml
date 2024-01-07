@@ -1,0 +1,68 @@
+name: build-and-test-wheels-arm64
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+jobs:
+  linux-build-aarch64:
+    name: Build wheel for linux arm64
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Prepare snap7 archive
+        uses: ./.github/actions/prepare_snap7
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+        with:
+          platforms: arm64
+
+      - name: Build wheel
+        uses: ./.github/actions/manylinux_2_24_aarch64
+        with:
+          script: ./.github/build_scripts/build_package.sh
+          platform: manylinux_2_24_aarch64
+          makefile: aarch64-linux-gnu.mk
+          python: /opt/python/cp38-cp38/bin/python
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: wheels
+          path: wheelhouse/*.whl
+
+  test-wheels-aarch64:
+    name: Testing wheel
+    needs: linux-build-aarch64
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.7", "3.8", "3.9", "3.10", "3.11"]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: wheels
+          path: wheelhouse
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+        with:
+          platforms: arm64
+
+      - name: Run tests in docker:arm64v8
+        run: |
+          docker run --rm --interactive -v $PWD/tests:/tests \
+            -v $PWD/pyproject.toml:/pyproject.toml \
+            -v $PWD/wheelhouse:/wheelhouse \
+            "arm64v8/python:${{ matrix.python-version }}-buster" /bin/bash -s <<EOF
+          python3 -m pip install $(ls wheelhouse/*_aarch64.whl)
+          python3 -m pip install pytest pytest-asyncio
+          python -m pytest tests/ -m "server or util or client or mainloop or partner"
+          EOF

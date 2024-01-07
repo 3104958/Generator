@@ -1,0 +1,33 @@
+title: FRAMEWORK FOR NETWORK COVERT CHANNEL
+owner:
+  name: Katharina
+  copyright: 2023
+protocols: 
+  # Choose between "OPCUA", "MODBUS", "S7COMM", "MQTT", "CoAP"
+  MODBUS:
+    # Total number of clients
+    clients: 3
+    server:
+            host: modbussav
+            port: 1234
+            internal: true
+            image: null
+    channels:
+      PT12:
+            malicious_clients: 1
+            # Choose the Covert Message
+            covert_str: null
+            covert_file: C:\Users\Katharina\secret.elf
+      PT15:
+            malicious_clients: 0
+            covert_str: null
+            covert_file: null
+      PT16:
+            malicious_clients: 2
+            covert_str: secret
+            covert_file: null
+        
+    # Time intervals between retransmissions/reconnections/resets [sec]
+    time_interval: 4
+    # Quit after adjustable period of time [sec] or by 0, quit by completion of the message transfer 
+    time_quit: 120
